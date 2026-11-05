@@ -3,7 +3,8 @@ import db
 import sys
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QStackedWidget, QFileDialog, QTableWidget, QTableWidgetItem, QMenuBar, QLineEdit, QSlider)
-from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QDesktopServices
+from PyQt6.QtCore import Qt, QUrl
 
 
 class AlgoAnalyzerApp(QMainWindow):
@@ -14,7 +15,7 @@ class AlgoAnalyzerApp(QMainWindow):
         self.setFixedSize(600, 400)
 
         self.stackedscreens = QStackedWidget()
-        self.screens = [self.main_window(), self.about_window(), self.graph_visualiser_window(), self.database_window(), self.running_sort_window()]
+        self.screens = [self.main_window(), self.graph_visualiser_window(), self.database_window(), self.running_sort_window()]
 
         for screen in self.screens:
               self.stackedscreens.addWidget(screen)
@@ -38,8 +39,8 @@ class AlgoAnalyzerApp(QMainWindow):
         github = QLabel('<a href="https://github.com/NoamXXxXxx/Sorting-Algoryhm-Analyser">My Github</a>')
         github.setOpenExternalLinks(True)
         
-        about.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(1))
-        open_visualiser_btn.clicked.connect(lambda: self.stackedscreens.setCurrentIndex(2))
+        about.triggered.connect(lambda: QDesktopServices.openUrl(QUrl("https://github.com/NoamXXxXxx/Sorting-Algoryhm-Analyser/blob/main/about.md")))
+        open_visualiser_btn.clicked.connect(lambda: self.stackedscreens.setCurrentIndex(1))
 
         btn_layout.addStretch()
         btn_layout.addWidget(open_visualiser_btn)
@@ -53,24 +54,6 @@ class AlgoAnalyzerApp(QMainWindow):
         main_layout.addLayout(btn_layout)
         main_layout.addStretch()
         main_layout.addLayout(bottom_layout)
-
-        return window
-
-    def about_window(self): # about window
-        window = QWidget()
-        layout = QVBoxLayout()
-        window.setLayout(layout)
-
-        bar = QMenuBar()
-        back = bar.addAction('Back')
-        about = QLabel("about.md")
-        about.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        back.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(0))
-
-        layout.addWidget(bar)
-        layout.addWidget(about)
-        layout.addStretch()
 
         return window
 
@@ -135,7 +118,7 @@ class AlgoAnalyzerApp(QMainWindow):
 
         self.spread_slider.valueChanged.connect(lambda val: self.spread_label.setText(f'numbers spread: {val}'))
         back.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(0))
-        open_db_btn.clicked.connect(lambda: self.stackedscreens.setCurrentIndex(3))
+        open_db_btn.clicked.connect(lambda: self.stackedscreens.setCurrentIndex(2))
         self.btn_choose_file.clicked.connect(self.open_file_dialog)
         run_file_btn.clicked.connect(self.start_sort)
 
@@ -192,7 +175,7 @@ class AlgoAnalyzerApp(QMainWindow):
         bar = QMenuBar()
         back = bar.addAction('back')
 
-        back.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(2))
+        back.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(1 ))
 
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["Name", "File", "Bars", "Time ms", "Comparisons"])
@@ -212,11 +195,11 @@ class AlgoAnalyzerApp(QMainWindow):
     def start_sort(self): # start sorting
         sort_func = load_sort(self.file_path)
         self.chart.start(sort_func, int(self.bars_input.text()), int(self.delay_input.text()))
-        self.stackedscreens.setCurrentIndex(4)
+        self.stackedscreens.setCurrentIndex(3)
 
     def stop_and_back(self): # break sorting visualisation
         self.chart.timer.stop()
-        self.stackedscreens.setCurrentIndex(2)
+        self.stackedscreens.setCurrentIndex(1)
 
     def running_sort_window(self): #sorting window
         window = QWidget()
@@ -225,15 +208,12 @@ class AlgoAnalyzerApp(QMainWindow):
 
         self.chart = Bars()
 
-        self.bar = QMenuBar()
-        back = self.bar.addAction('Back')
+        self.back_btn = QPushButton('Back') # remove this bar and add button
+        self.back_btn.setFixedSize(50, 30)
 
-        back.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(2))
+        self.back_btn.clicked.connect(lambda: self.stackedscreens.setCurrentIndex(1))
 
-        label = QLabel("Running Sort Screen")
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.bar)
-        layout.addWidget(label)
+        layout.addWidget(self.back_btn)
         layout.addWidget(self.chart, 1)
 
         return window
