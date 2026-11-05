@@ -1,4 +1,4 @@
-from visualiser import Bars
+from visualiser import Bars, load_sort
 import db
 import sys
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -127,7 +127,7 @@ class AlgoAnalyzerApp(QMainWindow):
         back.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(0))
         open_db_btn.clicked.connect(lambda: self.stackedscreens.setCurrentIndex(3))
         self.btn_choose_file.clicked.connect(self.open_file_dialog)
-        run_file_btn.clicked.connect(lambda: self.stackedscreens.setCurrentIndex(4))
+        run_file_btn.clicked.connect(self.running_sort_window)
 
         row_file.addWidget(file_label)
         row_file.addStretch()
@@ -167,6 +167,9 @@ class AlgoAnalyzerApp(QMainWindow):
 
         return window
 
+    def start_sort(self):
+        print('1')
+
     def open_file_dialog(self):
         target_path = r"C:\Users\фыв\Desktop\project\sorting algorythms"
         file_path, _ = QFileDialog.getOpenFileName(self, "Choose file", target_path, "All Files (*)")
@@ -199,7 +202,7 @@ class AlgoAnalyzerApp(QMainWindow):
             for c, value in enumerate(row):
                 self.table.setItem(r, c, QTableWidgetItem(str(value)))
 
-    def running_sort_window(self): # WIP ( hardest part :sob: :skull:)
+    def running_sort_window(self):
         window = QWidget()
         layout = QVBoxLayout()
         window.setLayout(layout)
