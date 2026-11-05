@@ -34,8 +34,8 @@ class AlgoAnalyzerApp(QMainWindow):
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         open_visualiser_btn = QPushButton("open visualiser")
         open_visualiser_btn.setFixedSize(300, 80)
-        build = QLabel('Build 0.4')
-        github = QLabel('<a href="https://github.com">My Github</a>')
+        build = QLabel('Build 0.6')
+        github = QLabel('<a href="https://github.com/NoamXXxXxx/Sorting-Algoryhm-Analyser">My Github</a>')
         github.setOpenExternalLinks(True)
         
         about.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(1))
@@ -95,31 +95,41 @@ class AlgoAnalyzerApp(QMainWindow):
         title = QLabel('Graph visualiser')
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         file_label = QLabel('sort function:')
+
         self.btn_choose_file = QPushButton('Choose file')
         self.btn_choose_file.setFixedWidth(150)
-        self.db_label = QLabel('db name:')
+        
+        self.db_label = QLabel('DB name:')
         self.db_input = QLineEdit()
         self.db_input.setPlaceholderText("Enter DB save name")
         self.db_input.setFixedWidth(150)
+
         self.bars_label = QLabel('bars amount:')
-        self.bars_input = QLineEdit()
+        self.bars_input = QLineEdit("50")
         self.bars_input.setPlaceholderText("e.g. 50")
         self.bars_input.setFixedWidth(150)
         self.spread_label = QLabel('numbers spread: 0')
+
         self.spread_slider = QSlider(Qt.Orientation.Horizontal)
         self.spread_slider.setMinimum(0)
-        self.spread_slider.setMaximum(10)
+        self.spread_slider.setMaximum(5)
         self.spread_slider.setFixedWidth(150)
+
         self.delay_label = QLabel('actions delay (ms):')
-        self.delay_input = QLineEdit()
-        self.delay_input.setPlaceholderText("e.g. 10")
+        self.delay_input = QLineEdit("5")
+        self.delay_input.setPlaceholderText("e.g. 5")
         self.delay_input.setFixedWidth(150)
+
         run_file_btn = QPushButton("run file")
         run_file_btn.setFixedSize(150, 40)
+
         self.filename = QLabel('name: {filename}')
-        time = QLabel('estemated running time: 3,5sec')
+
+        time = QLabel('estemated running time: ...')
+
         open_db_btn = QPushButton("open database")
         open_db_btn.setFixedSize(150, 40)
+
         note = QLabel('note:\nvisualiser settings,\nas colors, and statistics\nare in settings tab')
         note.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
 
@@ -127,7 +137,7 @@ class AlgoAnalyzerApp(QMainWindow):
         back.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(0))
         open_db_btn.clicked.connect(lambda: self.stackedscreens.setCurrentIndex(3))
         self.btn_choose_file.clicked.connect(self.open_file_dialog)
-        run_file_btn.clicked.connect(self.running_sort_window)
+        run_file_btn.clicked.connect(self.start_sort)
 
         row_file.addWidget(file_label)
         row_file.addStretch()
@@ -167,15 +177,12 @@ class AlgoAnalyzerApp(QMainWindow):
 
         return window
 
-    def start_sort(self):
-        print('1')
-
-    def open_file_dialog(self):
+    def open_file_dialog(self): # choose file opener
         target_path = r"C:\Users\фыв\Desktop\project\sorting algorythms"
         file_path, _ = QFileDialog.getOpenFileName(self, "Choose file", target_path, "All Files (*)")
         if file_path:
             self.file_path = file_path
-            self.filename.setText(f"sort function: {file_path.splut('/')[-1]}")
+            self.filename.setText(f"sort function: {file_path.split('/')[-1]}")
 
     def database_window(self): # db window
         window = QWidget()
@@ -195,27 +202,38 @@ class AlgoAnalyzerApp(QMainWindow):
 
         return window
     
-    def load_tier_list(self): # db load tabl
+    def load_tier_list(self): # db load table
         rows = db.get_tier_list()
         self.table.setRowCount(len(rows))
         for r, row in enumerate(rows):
             for c, value in enumerate(row):
                 self.table.setItem(r, c, QTableWidgetItem(str(value)))
+                
+    def start_sort(self): # start sorting
+        sort_func = load_sort(self.file_path)
+        self.chart.start(sort_func, int(self.bars_input.text()), int(self.delay_input.text()))
+        self.stackedscreens.setCurrentIndex(4)
 
-    def running_sort_window(self):
+    def stop_and_back(self): # break sorting visualisation
+        self.chart.timer.stop()
+        self.stackedscreens.setCurrentIndex(2)
+
+    def running_sort_window(self): #sorting window
         window = QWidget()
         layout = QVBoxLayout()
         window.setLayout(layout)
 
-        self.bar = Bars()
+        self.chart = Bars()
+
+        self.bar = QMenuBar()
         back = self.bar.addAction('Back')
 
         back.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(2))
 
-        layout.addWidget(self.bar)
         label = QLabel("Running Sort Screen")
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.bar)
         layout.addWidget(label)
-        layout.addStretch()
+        layout.addWidget(self.chart, 1)
 
         return window

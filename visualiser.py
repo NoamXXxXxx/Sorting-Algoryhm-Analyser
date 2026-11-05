@@ -56,6 +56,6 @@ class Bars(QWidget):
         top = max(self.arr)
         for i, value in enumerate(self.arr):
             bar_h = value / top * self.height()
-            p.setBrush(QColor("red") if i in self.active else QColor("white"))
+            p.setBrush(QColor("red") if i in self.active else QColor("black"))
             p.drawRect(QRectF(i * bar_w, self.height() - bar_h, bar_w, bar_h))
         p.end()
