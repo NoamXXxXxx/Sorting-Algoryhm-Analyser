@@ -1,6 +1,7 @@
 from visualiser import Bars, load_sort
 import db
-import sys
+
+import os
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QStackedWidget, QFileDialog, QTableWidget, QTableWidgetItem,
     QMenuBar, QLineEdit, QMessageBox, QComboBox)
@@ -196,21 +197,28 @@ class AlgoAnalyzerApp(QMainWindow):
     def database_window(self): # db window
         window = QWidget()
         layout = QVBoxLayout()
+        h_layout = QHBoxLayout()
         self.table = QTableWidget()
+
+        window.setLayout(layout)
 
         bar = QMenuBar()
         back = bar.addAction('back')
         self.delete_btn = QPushButton("Delete")
+        self.delete_all_btn = QPushButton("Delete all")
 
         back.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(1))
         self.delete_btn.clicked.connect(self.delete_selected)
+        self.delete_all_btn.clicked.connect(self.delete_all)
 
         self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels(["ID", "Name", "File", "Bars", "Time ms", "Comparisons"])
         layout.addWidget(bar)
         layout.addWidget(self.table)
-        layout.addWidget(self.delete_btn)
-        window.setLayout(layout)
+        h_layout.addWidget(self.delete_btn)
+        h_layout.addStretch()
+        h_layout.addWidget(self.delete_all_btn)
+        layout.addLayout(h_layout)
 
         return window
     
@@ -226,7 +234,11 @@ class AlgoAnalyzerApp(QMainWindow):
         if row < 0:
             return
         rows = db.get_tier_list()
-        db.delete_result(rows([row][5] if len(rows[row]) > 5 else row + 1))
+        db.delete_result(rows[row][0])
+        self.load_tier_list()
+
+    def delete_all(self):
+        db.delete_all()
         self.load_tier_list()
                 
     def start_sort(self): # start sorting + error handler
@@ -281,7 +293,7 @@ class AlgoAnalyzerApp(QMainWindow):
 
     def on_sort_finished(self, steps, elapsed_time): # stats save
         name = self.db_input.text()
-        file = self.db_input.text().strip() if self.db_input.text().strip() else "Unnamed"
+        file = os.path.basename(self.file_path)
         self.file_path.split('/')[-1]
         bars_count = int(self.bars_input.text())
         

@@ -12,7 +12,7 @@ def init_db():
 
 def save_res(name, file, bars_count, elapsed_time, comparisons):
     con = sqlite3.connect(db_name)
-    con.execute("""INSERT INTO tier_list VALUES (?, ?, ?, ?, ?)""", (name, file, bars_count, elapsed_time, comparisons))
+    con.execute("""INSERT INTO tier_list VALUES (?, ?, ?, ?, ?)""", ( name, file, bars_count, elapsed_time, comparisons))
     con.commit()
     con.close()
 
@@ -22,8 +22,14 @@ def get_tier_list():
     con.close()
     return rows
 
-def delete_result(index):
+def delete_result(rowid):
     con = sqlite3.connect(db_name)
-    con.execute("""DELETE FROM tier_list WHERE rowid = ?"""(index,))
+    con.execute("""DELETE FROM tier_list WHERE rowid = ?""",(rowid,))
+    con.commit()
+    con.close()
+
+def delete_all():
+    con = sqlite3.connect(db_name)
+    con.execute("""DELETE FROM tier_list""")
     con.commit()
     con.close()

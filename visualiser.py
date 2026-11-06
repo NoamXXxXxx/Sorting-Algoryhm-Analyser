@@ -43,7 +43,7 @@ class Bars(QWidget):
         except StopIteration:
             self.timer.stop()
             self.active = ()
-            elapsed = (time.perf_counter() - self.started_at) * 1000
+            elapsed = round((time.perf_counter() - self.started_at) * 1000, 3)
             self.finished.emit(self.steps, elapsed)
         self.update()
 
