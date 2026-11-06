@@ -3,7 +3,7 @@ import db
 import sys
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QStackedWidget, QFileDialog, QTableWidget, QTableWidgetItem,
-    QMenuBar, QLineEdit, QSlider, QMessageBox)
+    QMenuBar, QLineEdit, QSlider, QMessageBox, QComboBox)
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtCore import Qt, QUrl
 
@@ -30,14 +30,16 @@ class AlgoAnalyzerApp(QMainWindow):
         bottom_layout = QHBoxLayout() 
         window.setLayout(main_layout)
 
-        bar = QMenuBar()
-        settings = bar.addMenu('Setting')
-        about = bar.addAction('About')
+        self.bar = QMenuBar()
+        self.settings = self.bar.addMenu('Setting')
+        self.settings_combo(self.settings)
+        about = self.bar.addAction('About')
+
         title = QLabel('Graph sort visualiser App')
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         open_visualiser_btn = QPushButton("open visualiser")
         open_visualiser_btn.setFixedSize(300, 80)
-        build = QLabel('Build 0.7')
+        build = QLabel('Build 0.7.1')
         github = QLabel('<a href="https://github.com/NoamXXxXxx/Sorting-Algoryhm-Analyser">My Github</a>')
         github.setOpenExternalLinks(True)
         
@@ -50,7 +52,7 @@ class AlgoAnalyzerApp(QMainWindow):
         bottom_layout.addWidget(build)
         bottom_layout.addStretch()
         bottom_layout.addWidget(github)
-        main_layout.addWidget(bar)
+        main_layout.addWidget(self.bar)
         main_layout.addWidget(title)
         main_layout.addStretch()
         main_layout.addLayout(btn_layout)
@@ -58,6 +60,37 @@ class AlgoAnalyzerApp(QMainWindow):
         main_layout.addLayout(bottom_layout)
 
         return window
+
+    def settings_combo(self, menu_object):
+        menu_object.addAction('theme: light')
+        self.visualiser_settings = menu_object.addMenu('Visualiser settings')
+        
+        self.stat_label = self.visualiser_settings.addAction('-----statistics-----')
+        
+        self.act_file_name = self.visualiser_settings.addAction('file name')
+        self.act_file_name.setCheckable(True)
+        self.act_file_name.setChecked(True)
+        
+        self.act_comparisons = self.visualiser_settings.addAction('comparisons count')
+        self.act_comparisons.setCheckable(True)
+        self.act_comparisons.setChecked(True)
+        
+        self.act_accesses = self.visualiser_settings.addAction('array accesses')
+        self.act_accesses.setCheckable(True)
+        self.act_accesses.setChecked(True)
+        
+        self.act_action_delay = self.visualiser_settings.addAction('action delay')
+        self.act_action_delay.setCheckable(True)
+        self.act_action_delay.setChecked(True) 
+        
+        self.visualiser_settings.addSeparator()
+        
+        self.colors_label = self.visualiser_settings.addAction('-----colors-----')
+        
+        self.act_bar_color = self.visualiser_settings.addAction('bar color: {HEX}')
+        self.act_selected_color = self.visualiser_settings.addAction('selected bar color: {HEX}')
+        self.act_final_color = self.visualiser_settings.addAction('final bars color: {HEX}')
+
 
     def graph_visualiser_window(self): # pre-visualiser window
         window = QWidget()
@@ -77,13 +110,14 @@ class AlgoAnalyzerApp(QMainWindow):
         bar = QMenuBar()
         back = bar.addAction('back')
         settings = bar.addMenu('settings')
+        self.settings_combo(settings)
         title = QLabel('Graph visualiser')
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         file_label = QLabel('File:')
 
         self.btn_choose_file = QPushButton('Choose file')
         self.btn_choose_file.setFixedWidth(150)
-        self.filename = QLabel('Name: ...')
+        self.filename = QLabel('File: ...')
 
         self.db_label = QLabel('DB name:')
         self.db_input = QLineEdit()
@@ -243,3 +277,12 @@ class AlgoAnalyzerApp(QMainWindow):
         layout.addWidget(self.chart, 1)
 
         return window
+
+
+
+
+
+
+
+
+# add stats to running_sort_window, settings, CSS
