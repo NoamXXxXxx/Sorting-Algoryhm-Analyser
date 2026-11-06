@@ -1,6 +1,7 @@
 import importlib.util
 import random
 import time
+import db
 
 from PyQt6.QtCore import QRectF, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor, QPainter

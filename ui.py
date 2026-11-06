@@ -3,7 +3,7 @@ import db
 import sys
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QStackedWidget, QFileDialog, QTableWidget, QTableWidgetItem,
-    QMenuBar, QLineEdit, QSlider, QMessageBox, QComboBox)
+    QMenuBar, QLineEdit, QMessageBox, QComboBox)
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtCore import Qt, QUrl
 
@@ -14,7 +14,7 @@ class AlgoAnalyzerApp(QMainWindow):
         self.file_path = None
         db.init_db()
         self.setWindowTitle("Sorting Algorythm Analyzer")
-        self.setFixedSize(600, 400)
+        self.setFixedSize(700, 400)
 
         self.stackedscreens = QStackedWidget()
         self.screens = [self.main_window(), self.graph_visualiser_window(), self.database_window(), self.running_sort_window()]
@@ -22,6 +22,8 @@ class AlgoAnalyzerApp(QMainWindow):
         for screen in self.screens:
               self.stackedscreens.addWidget(screen)
         self.setCentralWidget(self.stackedscreens)
+
+        self.chart.finished.connect(self.on_sort_finished)
 
     def main_window(self): # main window
         window = QWidget()
@@ -102,7 +104,6 @@ class AlgoAnalyzerApp(QMainWindow):
         row_file = QHBoxLayout()
         row_db = QHBoxLayout()
         row_bars = QHBoxLayout()
-        row_spread = QHBoxLayout()
         row_delay = QHBoxLayout()
         
         window.setLayout(main_layout)
@@ -128,12 +129,6 @@ class AlgoAnalyzerApp(QMainWindow):
         self.bars_input = QLineEdit()
         self.bars_input.setPlaceholderText("e.g. 50")
         self.bars_input.setFixedWidth(150)
-        self.spread_label = QLabel('numbers spread: 0')
-
-        self.spread_slider = QSlider(Qt.Orientation.Horizontal)
-        self.spread_slider.setMinimum(0)
-        self.spread_slider.setMaximum(5)
-        self.spread_slider.setFixedWidth(150)
 
         self.delay_label = QLabel('actions delay (ms):')
         self.delay_input = QLineEdit()
@@ -149,9 +144,9 @@ class AlgoAnalyzerApp(QMainWindow):
         note = QLabel('note:\nvisualiser settings,\nas colors, and statistics\nare in settings tab')
         note.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
 
-        self.spread_slider.valueChanged.connect(lambda val: self.spread_label.setText(f'numbers spread: {val}'))
         back.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(0))
         open_db_btn.clicked.connect(lambda: self.stackedscreens.setCurrentIndex(2))
+        open_db_btn.clicked.connect(lambda: self.load_tier_list())
         self.btn_choose_file.clicked.connect(self.open_file_dialog)
         run_file_btn.clicked.connect(self.start_sort)
 
@@ -164,16 +159,12 @@ class AlgoAnalyzerApp(QMainWindow):
         row_bars.addWidget(self.bars_label)
         row_bars.addStretch()
         row_bars.addWidget(self.bars_input)
-        row_spread.addWidget(self.spread_label)
-        row_spread.addStretch()
-        row_spread.addWidget(self.spread_slider) 
         row_delay.addWidget(self.delay_label)
         row_delay.addStretch()
         row_delay.addWidget(self.delay_input)
         left_layout.addLayout(row_file)
         left_layout.addLayout(row_db)
         left_layout.addLayout(row_bars)
-        left_layout.addLayout(row_spread)
         left_layout.addLayout(row_delay)
         left_layout.addSpacing(20)
         left_layout.addWidget(run_file_btn)
@@ -209,13 +200,16 @@ class AlgoAnalyzerApp(QMainWindow):
 
         bar = QMenuBar()
         back = bar.addAction('back')
+        self.delete_btn = QPushButton("Delete")
 
-        back.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(1 ))
+        back.triggered.connect(lambda: self.stackedscreens.setCurrentIndex(1))
+        self.delete_btn.clicked.connect(self.delete_selected)
 
-        self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(["Name", "File", "Bars", "Time ms", "Comparisons"])
+        self.table.setColumnCount(6)
+        self.table.setHorizontalHeaderLabels(["ID", "Name", "File", "Bars", "Time ms", "Comparisons"])
         layout.addWidget(bar)
         layout.addWidget(self.table)
+        layout.addWidget(self.delete_btn)
         window.setLayout(layout)
 
         return window
@@ -226,6 +220,14 @@ class AlgoAnalyzerApp(QMainWindow):
         for r, row in enumerate(rows):
             for c, value in enumerate(row):
                 self.table.setItem(r, c, QTableWidgetItem(str(value)))
+
+    def delete_selected(self):
+        row = self.table.currentRow()
+        if row < 0:
+            return
+        rows = db.get_tier_list()
+        db.delete_result(rows([row][5] if len(rows[row]) > 5 else row + 1))
+        self.load_tier_list()
                 
     def start_sort(self): # start sorting + error handler
         if not self.file_path:
@@ -265,7 +267,6 @@ class AlgoAnalyzerApp(QMainWindow):
         window = QWidget()
         layout = QVBoxLayout()
         window.setLayout(layout)
-
         self.chart = Bars()
 
         self.back_btn = QPushButton('Back')
@@ -277,6 +278,15 @@ class AlgoAnalyzerApp(QMainWindow):
         layout.addWidget(self.chart, 1)
 
         return window
+
+    def on_sort_finished(self, steps, elapsed_time): # stats save
+        name = self.db_input.text()
+        file = self.db_input.text().strip() if self.db_input.text().strip() else "Unnamed"
+        self.file_path.split('/')[-1]
+        bars_count = int(self.bars_input.text())
+        
+        db.save_res(name, file, bars_count, elapsed_time, steps)
+        self.load_tier_list()
 
 
 

@@ -1,6 +1,7 @@
 import sqlite3
+import os
 
-db_name = 'database.db'
+db_name = os.path.join(os.path.dirname(__file__), "database.db")
 
 
 def init_db():
@@ -17,6 +18,12 @@ def save_res(name, file, bars_count, elapsed_time, comparisons):
 
 def get_tier_list():
     con = sqlite3.connect(db_name)
-    rows = con.execute("""SELECT name, file, bars_count, elapsed_time, comparisons FROM tier_list ORDER BY elapsed_time ASC""").fetchall()
+    rows = con.execute("""SELECT rowid, name, file, bars_count, elapsed_time, comparisons FROM tier_list ORDER BY elapsed_time ASC""").fetchall()
     con.close()
     return rows
+
+def delete_result(index):
+    con = sqlite3.connect(db_name)
+    con.execute("""DELETE FROM tier_list WHERE rowid = ?"""(index,))
+    con.commit()
+    con.close()
