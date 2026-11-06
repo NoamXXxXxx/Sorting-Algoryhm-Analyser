@@ -2,15 +2,16 @@ from visualiser import Bars, load_sort
 import db
 
 import os
+import time
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QStackedWidget, QFileDialog, QTableWidget, QTableWidgetItem,
     QMenuBar, QLineEdit, QMessageBox, QComboBox)
 from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtCore import Qt, QUrl, QTimer
 
 
 class AlgoAnalyzerApp(QMainWindow):
-    def __init__(self):
+    def __init__(self): # init
         super().__init__()
         self.file_path = None
         db.init_db()
@@ -42,7 +43,7 @@ class AlgoAnalyzerApp(QMainWindow):
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         open_visualiser_btn = QPushButton("open visualiser")
         open_visualiser_btn.setFixedSize(300, 80)
-        build = QLabel('Build 0.7.1')
+        build = QLabel('Build 0.9')
         github = QLabel('<a href="https://github.com/NoamXXxXxx/Sorting-Algoryhm-Analyser">My Github</a>')
         github.setOpenExternalLinks(True)
         
@@ -70,25 +71,13 @@ class AlgoAnalyzerApp(QMainWindow):
         
         self.stat_label = self.visualiser_settings.addAction('-----statistics-----')
         
-        self.act_file_name = self.visualiser_settings.addAction('file name')
-        self.act_file_name.setCheckable(True)
-        self.act_file_name.setChecked(True)
-        
-        self.act_comparisons = self.visualiser_settings.addAction('comparisons count')
-        self.act_comparisons.setCheckable(True)
-        self.act_comparisons.setChecked(True)
-        
-        self.act_accesses = self.visualiser_settings.addAction('array accesses')
-        self.act_accesses.setCheckable(True)
-        self.act_accesses.setChecked(True)
-        
-        self.act_action_delay = self.visualiser_settings.addAction('action delay')
-        self.act_action_delay.setCheckable(True)
-        self.act_action_delay.setChecked(True) 
+        self.showstats = self.visualiser_settings.addAction('Show stats?')
+        self.showstats.setCheckable(True)
+        self.showstats.setChecked(True)
         
         self.visualiser_settings.addSeparator()
         
-        self.colors_label = self.visualiser_settings.addAction('-----colors-----')
+        self.colors_label = self.visualiser_settings.addAction('-----colors----- WIP') # WIP
         
         self.act_bar_color = self.visualiser_settings.addAction('bar color: {HEX}')
         self.act_selected_color = self.visualiser_settings.addAction('selected bar color: {HEX}')
@@ -212,7 +201,7 @@ class AlgoAnalyzerApp(QMainWindow):
         self.delete_all_btn.clicked.connect(self.delete_all)
 
         self.table.setColumnCount(6)
-        self.table.setHorizontalHeaderLabels(["ID", "Name", "File", "Bars", "Time ms", "Comparisons"])
+        self.table.setHorizontalHeaderLabels(["ID", "Name", "File", "Bars", "Time sec", "Comparisons"])
         layout.addWidget(bar)
         layout.addWidget(self.table)
         h_layout.addWidget(self.delete_btn)
@@ -229,7 +218,7 @@ class AlgoAnalyzerApp(QMainWindow):
             for c, value in enumerate(row):
                 self.table.setItem(r, c, QTableWidgetItem(str(value)))
 
-    def delete_selected(self):
+    def delete_selected(self): # deletes selected row (id)
         row = self.table.currentRow()
         if row < 0:
             return
@@ -237,7 +226,7 @@ class AlgoAnalyzerApp(QMainWindow):
         db.delete_result(rows[row][0])
         self.load_tier_list()
 
-    def delete_all(self):
+    def delete_all(self): # deletes everything from db
         db.delete_all()
         self.load_tier_list()
                 
@@ -264,6 +253,7 @@ class AlgoAnalyzerApp(QMainWindow):
 
             sort_func = load_sort(self.file_path)
             self.chart.start(sort_func, bars, delay)
+            self.stats_timer.start(1)
 
         except ValueError as error:
             self.handle_error(error)
@@ -275,18 +265,42 @@ class AlgoAnalyzerApp(QMainWindow):
         self.chart.timer.stop()
         self.stackedscreens.setCurrentIndex(1)
 
-    def running_sort_window(self): #sorting window
+    def update_stats(self): # stats + stats updater while sorting
+        elapsed = (time.perf_counter() - self.chart.started_at)
+
+        self.stats_label.setText(
+            f"File: {os.path.basename(self.file_path)}  "
+            f"Bars: {len(self.chart.arr)}    "
+            f"Steps: {self.chart.steps}    "
+            f"Time: {elapsed:.2f} sec    "
+        )
+
+        if not self.chart.timer.isActive():
+            self.stats_timer.stop()
+
+    def running_sort_window(self): # sorting window
         window = QWidget()
+        h_layout = QHBoxLayout()
         layout = QVBoxLayout()
         window.setLayout(layout)
-        self.chart = Bars()
 
+        self.stats_label = QLabel()
+
+        self.stats_timer = QTimer(self)
         self.back_btn = QPushButton('Back')
         self.back_btn.setFixedSize(50, 30)
+        self.chart = Bars()
 
+        self.stats_label.setVisible(self.showstats.isChecked())
+        self.showstats.toggled.connect(self.stats_label.setVisible)
         self.back_btn.clicked.connect(lambda: self.stackedscreens.setCurrentIndex(1))
+        self.stats_timer.timeout.connect(self.update_stats)
 
-        layout.addWidget(self.back_btn)
+        h_layout.addWidget(self.back_btn)
+        h_layout.addStretch()
+        h_layout.addWidget(self.stats_label)
+        h_layout.addStretch()
+        layout.addLayout(h_layout)
         layout.addWidget(self.chart, 1)
 
         return window
@@ -307,4 +321,4 @@ class AlgoAnalyzerApp(QMainWindow):
 
 
 
-# add stats to running_sort_window, CSS (themes), db saves
+# add stats to running_sort_window, CSS (themes)

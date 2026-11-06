@@ -18,7 +18,7 @@ def load_sort(path):
 class Bars(QWidget):
     finished = pyqtSignal(int, float)
 
-    def __init__(self):
+    def __init__(self): # init
         super().__init__()
         self.arr = []
         self.active = ()
@@ -29,6 +29,7 @@ class Bars(QWidget):
         self.timer.timeout.connect(self.step)
 
     def start(self, sort_func, count, delay_ms):
+        self.execution_time = 0
         self.arr = random.sample(range(1, count + 1), count)
         self.steps = 0
         self.active = ()
@@ -36,18 +37,20 @@ class Bars(QWidget):
         self.started_at = time.perf_counter()
         self.timer.start(delay_ms)
 
-    def step(self):
+    def step(self): 
         try:
+            start = time.perf_counter()
             self.active = next(self.gen)
+            self.execution_time += time.perf_counter() - start 
             self.steps += 1
         except StopIteration:
             self.timer.stop()
             self.active = ()
-            elapsed = round((time.perf_counter() - self.started_at) * 1000, 3)
+            elapsed = round(self.execution_time * 1000, 3)
             self.finished.emit(self.steps, elapsed)
         self.update()
 
-    def paintEvent(self, event):
+    def paintEvent(self, event): # color thing for bars
         n = len(self.arr)
         if n == 0:
             return
