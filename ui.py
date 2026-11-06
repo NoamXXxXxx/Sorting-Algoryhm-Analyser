@@ -61,7 +61,7 @@ class AlgoAnalyzerApp(QMainWindow):
 
         return window
 
-    def settings_combo(self, menu_object):
+    def settings_combo(self, menu_object): # open settings
         menu_object.addAction('theme: light')
         self.visualiser_settings = menu_object.addMenu('Visualiser settings')
         
@@ -285,4 +285,4 @@ class AlgoAnalyzerApp(QMainWindow):
 
 
 
-# add stats to running_sort_window, settings, CSS
+# add stats to running_sort_window, CSS (themes), db saves
