@@ -1,12 +1,14 @@
 from visualiser import Bars, load_sort
 import db
 
+import re
+from pathlib import Path
 import os
 import time
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QStackedWidget, QFileDialog, QTableWidget, QTableWidgetItem,
-    QMenuBar, QLineEdit, QMessageBox, QComboBox)
-from PyQt6.QtGui import QDesktopServices
+    QMenuBar, QLineEdit, QMessageBox, QComboBox, QInputDialog)
+from PyQt6.QtGui import QDesktopServices, QColor
 from PyQt6.QtCore import Qt, QUrl, QTimer
 
 
@@ -14,6 +16,8 @@ class AlgoAnalyzerApp(QMainWindow):
     def __init__(self): # init
         super().__init__()
         self.file_path = None
+        self.current_theme = 'light'
+        self.bar_color_actions = []
         db.init_db()
         self.setWindowTitle("Sorting Algorythm Analyzer")
         self.setFixedSize(700, 400)
@@ -24,6 +28,7 @@ class AlgoAnalyzerApp(QMainWindow):
         for screen in self.screens:
               self.stackedscreens.addWidget(screen)
         self.setCentralWidget(self.stackedscreens)
+        self.apply_theme('dark')
 
         self.chart.finished.connect(self.on_sort_finished)
 
@@ -43,7 +48,7 @@ class AlgoAnalyzerApp(QMainWindow):
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         open_visualiser_btn = QPushButton("open visualiser")
         open_visualiser_btn.setFixedSize(300, 80)
-        build = QLabel('Build 0.9')
+        build = QLabel('Build 1.0')
         github = QLabel('<a href="https://github.com/NoamXXxXxx/Sorting-Algoryhm-Analyser">My Github</a>')
         github.setOpenExternalLinks(True)
         
@@ -66,23 +71,130 @@ class AlgoAnalyzerApp(QMainWindow):
         return window
 
     def settings_combo(self, menu_object): # open settings
-        menu_object.addAction('theme: light')
-        self.visualiser_settings = menu_object.addMenu('Visualiser settings')
-        
-        self.stat_label = self.visualiser_settings.addAction('-----statistics-----')
-        
-        self.showstats = self.visualiser_settings.addAction('Show stats?')
-        self.showstats.setCheckable(True)
-        self.showstats.setChecked(True)
-        
-        self.visualiser_settings.addSeparator()
-        
-        self.colors_label = self.visualiser_settings.addAction('-----colors----- WIP') # WIP
-        
-        self.act_bar_color = self.visualiser_settings.addAction('bar color: {HEX}')
-        self.act_selected_color = self.visualiser_settings.addAction('selected bar color: {HEX}')
-        self.act_final_color = self.visualiser_settings.addAction('final bars color: {HEX}')
+        theme_menu = menu_object.addMenu("Theme")
+        light_action = theme_menu.addAction("Light")
+        dark_action = theme_menu.addAction("Dark")
 
+        light_action.triggered.connect(
+            lambda: self.apply_theme("light")
+        )
+        dark_action.triggered.connect(
+            lambda: self.apply_theme("dark")
+        )
+        self.visualiser_settings = menu_object.addMenu(
+            'Visualiser settings'
+        )
+        self.stat_label = self.visualiser_settings.addAction(
+            '-----statistics-----'
+        )
+        self.act_file_name = self.visualiser_settings.addAction(
+            'file name'
+        )
+        self.act_file_name.setCheckable(True)
+        self.act_file_name.setChecked(True)
+        self.act_comparisons = self.visualiser_settings.addAction(
+            'comparisons count'
+        )
+        self.act_comparisons.setCheckable(True)
+        self.act_comparisons.setChecked(True)
+        self.act_accesses = self.visualiser_settings.addAction(
+            'array accesses'
+        )
+        self.act_accesses.setCheckable(True)
+        self.act_accesses.setChecked(True)
+        self.act_action_delay = self.visualiser_settings.addAction(
+            'action delay'
+        )
+        self.act_action_delay.setCheckable(True)
+        self.act_action_delay.setChecked(True)
+        self.visualiser_settings.addSeparator()
+        self.colors_label = self.visualiser_settings.addAction(
+            "----- colors -----"
+        )
+
+        self.act_bar_color = self.visualiser_settings.addAction(
+            "Bar color: #8AB4F8"
+        )
+
+        self.act_active_color = self.visualiser_settings.addAction(
+            "Active bar color: #FF7043"
+        )
+
+        self.act_bar_color.triggered.connect(
+            lambda: self.change_bar_color("normal")
+        )
+
+        self.act_active_color.triggered.connect(
+            lambda: self.change_bar_color("active")
+        )
+
+    def apply_theme(self, theme): # apply theme
+        themes = {
+            "light": {
+                "@WINDOW_BG@": "#F2F2F2",
+                "@TEXT_COLOR@": "#202020",
+                "@MENU_BG@": "#FFFFFF",
+                "@BUTTON_BG@": "#E5E5E5",
+                "@INPUT_BG@": "#FFFFFF",
+                "@BORDER_COLOR@": "#CCCCCC",
+                "@HOVER_COLOR@": "#D6E5F5",
+                "@ACCENT_COLOR@": "#4285F4",
+            },
+
+            "dark": {
+                "@WINDOW_BG@": "#202124",
+                "@TEXT_COLOR@": "#F1F1F1",
+                "@MENU_BG@": "#303134",
+                "@BUTTON_BG@": "#3C4043",
+                "@INPUT_BG@": "#303134",
+                "@BORDER_COLOR@": "#555555",
+                "@HOVER_COLOR@": "#50555A",
+                "@ACCENT_COLOR@": "#8AB4F8",
+            }
+        }
+
+        qss_path = Path(__file__).resolve().with_name("themes.qss")
+        stylesheet = qss_path.read_text(encoding="utf-8")
+        for variable, color in themes[theme].items():
+            stylesheet = stylesheet.replace(variable, color)
+        self.setStyleSheet(stylesheet)
+        self.current_theme = theme
+
+    def change_bar_color(self, color_type):
+        if color_type == "normal":
+            current_color = self.chart.bar_color.name()
+            title = "Bar color"
+        else:
+            current_color = self.chart.active_color.name()
+            title = "Active bar color"
+        color, accepted = QInputDialog.getText(
+            self,
+            title,
+            "Enter HEX color (#RRGGBB):",
+            text=current_color
+        )
+        if not accepted:
+            return
+        
+        if not re.fullmatch(r"#[0-9a-fA-F]{6}", color):
+            QMessageBox.warning(
+                self,
+                "Invalid color",
+                "Enter HEX color like #3498DB"
+            )
+            return
+
+        if color_type == "normal":
+            self.chart.bar_color = QColor(color)
+            self.act_bar_color.setText(
+                f"Bar color: {color.upper()}"
+            )
+        else:
+            self.chart.active_color = QColor(color)
+            self.act_active_color.setText(
+                f"Active bar color: {color.upper()}"
+            )
+        self.chart.update()
 
     def graph_visualiser_window(self): # pre-visualiser window
         window = QWidget()
@@ -291,8 +403,8 @@ class AlgoAnalyzerApp(QMainWindow):
         self.back_btn.setFixedSize(50, 30)
         self.chart = Bars()
 
-        self.stats_label.setVisible(self.showstats.isChecked())
-        self.showstats.toggled.connect(self.stats_label.setVisible)
+        self.stats_label.setVisible(self.act_file_name.isChecked())
+        self.act_file_name.toggled.connect(self.stats_label.setVisible)
         self.back_btn.clicked.connect(lambda: self.stackedscreens.setCurrentIndex(1))
         self.stats_timer.timeout.connect(self.update_stats)
 
@@ -321,4 +433,4 @@ class AlgoAnalyzerApp(QMainWindow):
 
 
 
-# add stats to running_sort_window, CSS (themes)
+# add CSS (themes)

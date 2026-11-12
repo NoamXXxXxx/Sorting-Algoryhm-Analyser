@@ -27,6 +27,8 @@ class Bars(QWidget):
         self.started_at = 0
         self.timer = QTimer()
         self.timer.timeout.connect(self.step)
+        self.bar_color = QColor("#8AB4F8")
+        self.active_color = QColor("#FF7043")
 
     def start(self, sort_func, count, delay_ms):
         self.execution_time = 0
@@ -54,12 +56,28 @@ class Bars(QWidget):
         n = len(self.arr)
         if n == 0:
             return
+
         p = QPainter(self)
         p.setPen(Qt.PenStyle.NoPen)
         bar_w = self.width() / n
         top = max(self.arr)
         for i, value in enumerate(self.arr):
             bar_h = value / top * self.height()
-            p.setBrush(QColor("red") if i in self.active else QColor("black"))
-            p.drawRect(QRectF(i * bar_w, self.height() - bar_h, bar_w, bar_h))
+            if i in self.active:
+                p.setBrush(self.active_color)
+            else:
+                p.setBrush(self.bar_color)
+
+            p.drawRect(
+                QRectF(
+                    i * bar_w,
+                    self.height() - bar_h,
+                    bar_w,
+                    bar_h
+                )
+            )
         p.end()
+
+    def set_bar_color(self, color):
+        self.bar_color = QColor(color)
+        self.update()
