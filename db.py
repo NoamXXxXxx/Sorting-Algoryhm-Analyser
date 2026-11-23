@@ -1,7 +1,14 @@
 import sqlite3
 import os
 
-db_name = os.path.join(os.path.dirname(__file__), "database.db")
+
+app_data = os.path.join(
+    os.environ.get("APPDATA", os.path.expanduser("~")),
+    "SortingAlgorithmAnalyzer"
+)
+
+os.makedirs(app_data, exist_ok=True)
+db_name = os.path.join(app_data, "database.db")
 
 
 def init_db():

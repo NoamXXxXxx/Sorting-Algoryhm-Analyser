@@ -1,0 +1,73 @@
+QMainWindow, QWidget {
+    background-color: @WINDOW_BG@;
+    color: @TEXT_COLOR@;
+    font-family: "Segoe UI";
+    font-size: 10pt;
+}
+
+
+QMenuBar {
+    background-color: @MENU_BG@;
+    color: @TEXT_COLOR@;
+    padding: 4px;
+}
+
+QMenuBar::item:selected {
+    background-color: @HOVER_COLOR@;
+}
+
+QMenu {
+    background-color: @MENU_BG@;
+    color: @TEXT_COLOR@;
+    border: 1px solid @BORDER_COLOR@;
+}
+
+QMenu::item:selected {
+    background-color: @HOVER_COLOR@;
+}
+
+
+QPushButton {
+    background-color: @BUTTON_BG@;
+    color: @TEXT_COLOR@;
+    border: 1px solid @BORDER_COLOR@;
+    border-radius: 5px;
+    padding: 7px;
+}
+
+QPushButton:hover {
+    background-color: @HOVER_COLOR@;
+}
+
+
+QLineEdit, QComboBox {
+    background-color: @INPUT_BG@;
+    color: @TEXT_COLOR@;
+    border: 1px solid @BORDER_COLOR@;
+    border-radius: 4px;
+    padding: 5px;
+}
+
+QLineEdit:focus {
+    border: 1px solid @ACCENT_COLOR@;
+}
+
+
+QTableWidget {
+    background-color: @INPUT_BG@;
+    color: @TEXT_COLOR@;
+    gridline-color: @BORDER_COLOR@;
+    border: 1px solid @BORDER_COLOR@;
+}
+
+QHeaderView::section {
+    background-color: @MENU_BG@;
+    color: @TEXT_COLOR@;
+    padding: 5px;
+    border: 1px solid @BORDER_COLOR@;
+}
+
+QTableWidget::item:selected {
+    background-color: @HOVER_COLOR@;
+    color: @TEXT_COLOR@;
+}

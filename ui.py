@@ -4,12 +4,22 @@ import db
 import re
 from pathlib import Path
 import os
+import sys
 import time
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QStackedWidget, QFileDialog, QTableWidget, QTableWidgetItem,
     QMenuBar, QLineEdit, QMessageBox, QComboBox, QInputDialog)
 from PyQt6.QtGui import QDesktopServices, QColor
 from PyQt6.QtCore import Qt, QUrl, QTimer
+
+
+def resource_path(relative_path):
+    if hasattr(sys, "_MEIPASS"):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+    return os.path.join(base_path, relative_path)
 
 
 class AlgoAnalyzerApp(QMainWindow):
@@ -153,7 +163,7 @@ class AlgoAnalyzerApp(QMainWindow):
             }
         }
 
-        qss_path = Path(__file__).resolve().with_name("themes.qss")
+        qss_path = Path(resource_path("themes.qss"))
         stylesheet = qss_path.read_text(encoding="utf-8")
         for variable, color in themes[theme].items():
             stylesheet = stylesheet.replace(variable, color)
@@ -289,11 +299,16 @@ class AlgoAnalyzerApp(QMainWindow):
         QMessageBox.warning(self, "Input error", str(error))
 
     def open_file_dialog(self): # choose file opener
-        target_path = r"C:\Users\фыв\Desktop\project\sorting algorythms"
-        file_path, _ = QFileDialog.getOpenFileName(self, "Choose file", target_path, "All Files (*)")
+        target_path = resource_path("sorting algorythms")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Choose file",
+            target_path,
+            "Python Files (*.py)"
+        )
         if file_path:
             self.file_path = file_path
-            self.filename.setText(f"File: {file_path.split('/')[-1]}")
+            self.filename.setText(f"File: {os.path.basename(file_path)}")
 
     def database_window(self): # db window
         window = QWidget()
@@ -425,12 +440,3 @@ class AlgoAnalyzerApp(QMainWindow):
         
         db.save_res(name, file, bars_count, elapsed_time, steps)
         self.load_tier_list()
-
-
-
-
-
-
-
-
-# add CSS (themes)
